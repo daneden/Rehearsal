@@ -1,6 +1,11 @@
 import SwiftUI
+#if canImport(UIKit)
+	import UIKit
+#elseif canImport(AppKit)
+	import AppKit
+#endif
 
-/// The kind of control a adjustable type renders. Exposed so control selection
+/// The kind of control an adjustable type renders. Exposed so control selection
 /// can be verified in tests without rendering views.
 public enum ControlKind: String, Sendable, Equatable {
 	/// A text field (`String`).
@@ -166,10 +171,17 @@ extension Color: Adjustable {
 		ColorPicker(name, selection: value)
 	}
 
+	// Components come from the platform color rather than
+	// `Color.resolve(in:)`, which would raise the platform floor to
+	// iOS 17 / macOS 14.
 	public var codeLiteral: String {
-		let resolved = resolve(in: EnvironmentValues())
-		let components = [resolved.red, resolved.green, resolved.blue, resolved.opacity]
-			.map { Self.componentLiteral($0) }
+		var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+		#if canImport(UIKit)
+			UIColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+		#elseif canImport(AppKit)
+			NSColor(self).usingColorSpace(.sRGB)?.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+		#endif
+		let components = [red, green, blue, alpha].map { Self.componentLiteral($0) }
 		return "Color(red: \(components[0]), green: \(components[1]), blue: \(components[2]), opacity: \(components[3]))"
 	}
 
@@ -177,7 +189,7 @@ extension Color: Adjustable {
 		.colorPicker
 	}
 
-	private static func componentLiteral(_ value: Float) -> String {
+	private static func componentLiteral(_ value: CGFloat) -> String {
 		var text = String(format: "%.3f", Double(value))
 		while text.hasSuffix("0") {
 			text.removeLast()

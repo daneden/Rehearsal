@@ -56,6 +56,18 @@ without reading this:
 The runtime API also removed the macro's ergonomic warts (name/order
 duplication between a `Param` list and a closure signature).
 
+## Platform scope
+
+iOS 16 / macOS 13 / visionOS 1 / Mac Catalyst 16. The floor is set by the
+control set, not by exotic API — the one iOS-17 API we used
+(`Color.resolve(in:)`) was replaced with `UIColor`/`NSColor` component
+extraction in `Color.codeLiteral`. tvOS and watchOS are deliberately out of
+scope: tvOS has no `Slider`/`Stepper`/`ColorPicker`, watchOS lacks
+`ColorPicker`, segmented pickers, and any pasteboard — supporting them means a
+parallel control set, not a platforms-list edit. visionOS builds are verified
+locally (`xcodebuild -destination 'generic/platform=visionOS'`); CI doesn't
+cover visionOS because runner images don't reliably include its SDK.
+
 ## SDK and toolchain notes
 
 - **SDK 27: `@State` is a macro** and suppresses synthesized initializers —

@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
 	name: "Rehearsal",
-	platforms: [.iOS(.v17), .macOS(.v14)],
+	platforms: [.iOS(.v16), .macOS(.v13), .visionOS(.v1), .macCatalyst(.v16)],
 	products: [
 		.library(
 			name: "Rehearsal",

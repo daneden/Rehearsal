@@ -16,8 +16,11 @@ No macros, no code generation, no dependencies.
 
 ## Requirements
 
-- iOS 17 / macOS 14
+- iOS 16 / macOS 13 / visionOS 1 / Mac Catalyst 16
 - Swift 6.0+
+
+tvOS and watchOS aren't supported: they lack most of the controls the panel
+is built from (sliders, steppers, color pickers).
 
 ## Installation
 
