@@ -150,6 +150,14 @@ every supported parameter type, plus a hand-wired harness for when you need
 full control over the state. Open the package in Xcode and preview
 `Examples/RehearsalExamples/MyCard.swift`.
 
+## Agent skill
+
+The repository ships an [agent skill](https://agentskills.io) at
+[`skills/rehearsal/SKILL.md`](skills/rehearsal/SKILL.md) that teaches coding
+agents how to integrate and use Rehearsal. For Claude Code, copy the
+`skills/rehearsal` directory into your project's `.claude/skills/` (or
+`~/.claude/skills/` to make it available everywhere).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
