@@ -1,5 +1,7 @@
 # Rehearsal
 
+[![CI](https://github.com/daneden/Rehearsal/actions/workflows/ci.yml/badge.svg)](https://github.com/daneden/Rehearsal/actions/workflows/ci.yml)
+
 Interactive SwiftUI previews with an auto-generated control panel. Declare the
 adjustable parameters of a view inline — right where the values are used — and
 Rehearsal builds the state, the live controls, and the wired-up preview. A
@@ -15,6 +17,7 @@ No macros, no code generation, no dependencies — one small runtime library.
 ## Requirements
 
 - iOS 17 / macOS 14
+- Swift 6.0+
 
 ## Installation
 

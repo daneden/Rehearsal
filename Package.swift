@@ -1,4 +1,4 @@
-// swift-tools-version: 6.4
+// swift-tools-version: 6.0
 // Rehearsal — interactive SwiftUI previews with an auto-generated control panel.
 
 import PackageDescription
