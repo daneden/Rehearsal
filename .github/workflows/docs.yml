@@ -1,0 +1,59 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deployment at a time; let in-flight runs finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build DocC site
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select latest Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+      - name: Build documentation
+        run: |
+          swift package --allow-writing-to-directory docs-site \
+            generate-documentation --target Rehearsal \
+            --disable-indexing \
+            --transform-for-static-hosting \
+            --hosting-base-path Rehearsal \
+            --output-path docs-site
+      - name: Add root redirect
+        run: |
+          cat > docs-site/index.html <<'HTML'
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta http-equiv="refresh" content="0; url=documentation/rehearsal/">
+              <link rel="canonical" href="documentation/rehearsal/">
+            </head>
+            <body><a href="documentation/rehearsal/">Rehearsal documentation</a></body>
+          </html>
+          HTML
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs-site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

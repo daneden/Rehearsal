@@ -123,8 +123,10 @@ Three escape hatches, from least to most involved:
 
 ## Documentation
 
-Full API documentation ships as a DocC catalog: **Product > Build
-Documentation** in Xcode, or `swift package generate-documentation`.
+Full API documentation is published at
+[daneden.github.io/Rehearsal](https://daneden.github.io/Rehearsal/documentation/rehearsal/),
+and ships as a DocC catalog: **Product > Build Documentation** in Xcode, or
+`swift package generate-documentation`.
 
 ## Examples
 
