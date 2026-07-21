@@ -134,3 +134,7 @@ The `Examples/RehearsalExamples` target ships `MyCard`, a demo view exercising
 every supported parameter type, plus a hand-wired harness for when you need
 full control over the state. Open the package in Xcode and preview
 `Examples/RehearsalExamples/MyCard.swift`.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
