@@ -135,6 +135,7 @@ public struct Parameters {
 public struct Rehearse<Content: View>: View {
 	private let title: String?
 	private let subjectName: String
+	private let splitOrientation: RehearsalSplitOrientation
 	private let content: @MainActor (Parameters) -> Content
 
 	@State private var values = ParameterValues()
@@ -143,10 +144,12 @@ public struct Rehearse<Content: View>: View {
 	/// type's name.
 	public init(
 		_ subject: Any.Type,
+		splitOrientation: RehearsalSplitOrientation = .vertical,
 		@ViewBuilder content: @escaping @MainActor (Parameters) -> Content
 	) {
 		title = nil
 		subjectName = String(describing: subject)
+		self.splitOrientation = splitOrientation
 		self.content = content
 	}
 
@@ -154,10 +157,12 @@ public struct Rehearse<Content: View>: View {
 	public init(
 		_ title: String,
 		_ subject: Any.Type,
+		splitOrientation: RehearsalSplitOrientation = .vertical,
 		@ViewBuilder content: @escaping @MainActor (Parameters) -> Content
 	) {
 		self.title = title
 		subjectName = String(describing: subject)
+		self.splitOrientation = splitOrientation
 		self.content = content
 	}
 
@@ -168,7 +173,8 @@ public struct Rehearse<Content: View>: View {
 			title: title ?? subjectName,
 			subjectName: subjectName,
 			controls: params.session.controls,
-			reset: { values.storage = [:] }
+			reset: { values.storage = [:] },
+			splitOrientation: splitOrientation
 		) {
 			rehearsed
 		}

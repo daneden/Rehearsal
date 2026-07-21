@@ -5,63 +5,93 @@ import SwiftUI
 	import AppKit
 #endif
 
+/// The macOS split orientation used by ``RehearsalHarness``.
+public enum RehearsalSplitOrientation: String, CaseIterable, Hashable, Sendable {
+	/// Shows the rehearsed view and controls side by side, separated by a vertical divider.
+	case vertical
+
+	/// Shows the rehearsed view above the controls, separated by a horizontal divider.
+	case horizontal
+}
+
 /// The interactive preview layout: the rehearsed view fills the preview, and
-/// the control panel floats alongside it — a resizable sheet on iOS and
-/// visionOS (the preview stays visible and interactive behind it), a floating
-/// overlay on macOS. Both minimize to a button in the bottom-trailing corner.
+/// the control panel appears in a resizable split pane on macOS, or as a
+/// resizable sheet on iOS and visionOS (the preview stays visible and
+/// interactive behind it). Both minimize to a button in the bottom-trailing
+/// corner.
 public struct RehearsalHarness<Content: View>: View {
 	private let title: String
 	private let subjectName: String
 	private let controls: [ParameterControl]
 	private let reset: () -> Void
 	private let content: Content
+	private let initialSplitOrientation: RehearsalSplitOrientation
 
 	@State private var justCopied = false
 	@State private var isExpanded = true
+	@State private var selectedSplitOrientation: RehearsalSplitOrientation?
 
 	public init(
 		title: String,
 		subjectName: String,
 		controls: [ParameterControl],
 		reset: @escaping () -> Void,
+		splitOrientation: RehearsalSplitOrientation = .vertical,
 		@ViewBuilder content: () -> Content
 	) {
 		self.title = title
 		self.subjectName = subjectName
 		self.controls = controls
 		self.reset = reset
+		initialSplitOrientation = splitOrientation
 		self.content = content()
 	}
 
 	public var body: some View {
-		ZStack(alignment: .bottomTrailing) {
-			ZStack {
-				content
-			}
-			.frame(maxWidth: .infinity, maxHeight: .infinity)
-			.padding()
-			#if os(macOS)
-				// Keep the rehearsed view visible beside the overlay panel.
-				.padding(.trailing, isExpanded ? 376 : 0)
-			#endif
+		#if os(macOS)
+			VStack(spacing: 0) {
+				HStack {
+					Spacer()
 
-			#if os(macOS)
+					Picker("Split orientation", selection: splitOrientation) {
+						Label("Vertical", systemImage: "rectangle.split.2x1")
+							.tag(RehearsalSplitOrientation.vertical)
+							.labelStyle(.iconOnly)
+						Label("Horizontal", systemImage: "rectangle.split.1x2")
+							.tag(RehearsalSplitOrientation.horizontal)
+							.labelStyle(.iconOnly)
+					}
+					.pickerStyle(.segmented)
+					.labelsHidden()
+
+					expandButton
+				}
+				.controlSize(.mini)
+				.padding(8)
+				.background(.regularMaterial)
+
+				Divider()
+
 				if isExpanded {
-					overlayPanel
-						.transition(.scale(scale: 0.1, anchor: .bottomTrailing).combined(with: .opacity))
+					macOSSplitLayout
 				} else {
+					previewPane
+				}
+			}
+		#else
+			VStack {
+				previewPane
+			}
+			.padding(.bottom, isExpanded ? 360 : 0)
+			.animation(.default, value: isExpanded)
+			.toolbar {
+				ToolbarItem(placement: .bottomBar) {
 					expandButton
 				}
-			#else
-				if !isExpanded {
-					expandButton
-				}
-			#endif
-		}
-		#if !os(macOS)
-		.sheet(isPresented: $isExpanded) {
-			sheetPanel
-		}
+			}
+			.sheet(isPresented: $isExpanded) {
+				sheetPanel
+			}
 		#endif
 	}
 
@@ -70,30 +100,52 @@ public struct RehearsalHarness<Content: View>: View {
 		rehearsalCallCode(subject: subjectName, controls: controls)
 	}
 
+	private var currentSplitOrientation: RehearsalSplitOrientation {
+		selectedSplitOrientation ?? initialSplitOrientation
+	}
+
+	private var splitOrientation: Binding<RehearsalSplitOrientation> {
+		Binding(
+			get: { currentSplitOrientation },
+			set: { selectedSplitOrientation = $0 }
+		)
+	}
+
 	// MARK: - Panel pieces
+
+	private var previewPane: some View {
+		ZStack {
+			content
+		}
+		.frame(maxWidth: .infinity, maxHeight: .infinity)
+		.padding()
+	}
+
+	private var resetButton: some View {
+		Button("Reset", systemImage: "arrow.counterclockwise", action: reset)
+			.labelStyle(.iconOnly)
+	}
+
+	private var copyCodeButton: some View {
+		Button {
+			copyCode()
+		} label: {
+			Label(
+				justCopied ? "Copied" : "Copy code",
+				systemImage: justCopied ? "checkmark" : "doc.on.doc"
+			)
+		}
+	}
 
 	private var header: some View {
 		HStack {
 			Text(title)
 				.font(.headline)
 			Spacer()
-			Button {
-				copyCode()
-			} label: {
-				Label(
-					justCopied ? "Copied" : "Copy values as code",
-					systemImage: justCopied ? "checkmark" : "doc.on.doc"
-				)
-			}
-			Button("Reset", role: .destructive, action: reset)
-			Button {
-				withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-					isExpanded = false
-				}
-			} label: {
-				Image(systemName: "arrow.down.right.and.arrow.up.left")
-			}
-			.accessibilityLabel("Minimize controls")
+
+			copyCodeButton
+
+			resetButton
 		}
 		.buttonStyle(.bordered)
 		.controlSize(.small)
@@ -114,46 +166,55 @@ public struct RehearsalHarness<Content: View>: View {
 
 	/// The bottom-trailing floating button the panel minimizes to.
 	private var expandButton: some View {
-		Button {
-			withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-				isExpanded = true
-			}
-		} label: {
-			Image(systemName: "slider.horizontal.3")
-				.font(.title3)
-				.padding(14)
-				.background(.regularMaterial, in: Circle())
-				.overlay(Circle().strokeBorder(.quaternary))
-				.shadow(color: .black.opacity(0.15), radius: 12, y: 4)
+		Toggle(isOn: $isExpanded) {
+			Label("Toggle controls", systemImage: "slider.horizontal.3")
+				.labelStyle(.iconOnly)
 		}
-		.buttonStyle(.plain)
-		.padding()
-		.accessibilityLabel("Show controls")
+		.toggleStyle(.button)
 	}
 
 	#if os(macOS)
-		private var overlayPanel: some View {
+		@ViewBuilder
+		private var macOSSplitLayout: some View {
+			switch currentSplitOrientation {
+			case .vertical:
+				HSplitView {
+					previewPane
+						.frame(minWidth: 240)
+					macOSControlsPane
+						.frame(minWidth: 280, idealWidth: 360)
+				}
+			case .horizontal:
+				VSplitView {
+					previewPane
+						.frame(minHeight: 180)
+					macOSControlsPane
+						.frame(minHeight: 220, idealHeight: 320)
+				}
+			}
+		}
+
+		private var macOSControlsPane: some View {
 			VStack(spacing: 0) {
 				header
 				Divider()
 				controlRows
 			}
-			.frame(width: 360)
-			.frame(maxHeight: 440)
-			.background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
-			.overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.quaternary))
-			.shadow(color: .black.opacity(0.2), radius: 24, y: 8)
-			.padding()
+			.frame(maxWidth: .infinity, maxHeight: .infinity)
+			.background(.regularMaterial)
 		}
 	#else
 		private var sheetPanel: some View {
-			VStack(spacing: 0) {
-				header
-					.padding(.top, 6)
-				Divider()
+			NavigationStack {
 				controlRows
+					.navigationTitle(Text(title))
+					.navigationBarTitleDisplayMode(.inline)
+					.toolbar {
+						copyCodeButton
+						resetButton
+					}
 			}
-			.presentationDetents([.height(360), .large])
+			.presentationDetents([.height(360)])
 			.presentationDragIndicator(.visible)
 			.modifier(BackgroundInteractionModifier())
 		}
