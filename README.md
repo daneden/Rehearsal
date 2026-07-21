@@ -12,7 +12,7 @@ The preview shows the view on top and a scrollable control panel below, with a
 `MyCard(title: "Hello", count: 3, ...)` reflecting the current values) and a
 **Reset** button.
 
-No macros, no code generation, no dependencies — one small runtime library.
+No macros, no code generation, no dependencies.
 
 ## Requirements
 
@@ -75,10 +75,6 @@ the copied code snippet; pass an explicit title with
 | `CaseIterable & Hashable` enum | Picker (segmented for ≤ 3 cases, menu otherwise) |
 
 Enums need no conformance at all — any `CaseIterable & Hashable` enum works.
-To support your own type, conform it to `Adjustable`: it renders its own
-control row and prints its value as a Swift literal for **Copy values as
-code**. (Enums get an implementation for free via
-`extension MyEnum: Adjustable {}`.)
 
 ### Choosing the control
 
@@ -123,51 +119,16 @@ Three escape hatches, from least to most involved:
   branch.
 - Names are used as argument labels in the copied code snippet, so use the
   view's real parameter names.
+- Picker options must be distinct and contain the default (asserted in debug).
 
-### Hand-wiring
+## Documentation
 
-Everything `Rehearse` does is public API. See
-`Examples/RehearsalExamples/HandWiredExample.swift` for a `RehearsalHarness`
-wired up with explicit `@State` and `ParameterControl`s — useful when you need
-custom state handling.
-
-## How it works
-
-`Rehearse` owns a name-keyed value store (`@State`). During body evaluation it
-hands your closure a `Parameters` value; each `param(...)` call registers a typed
-control row bound to the store and returns the current value (or the default
-when unset). `RehearsalHarness` renders the split layout, the rows, and the
-copy/reset buttons. Reset simply clears the store, so every control falls back
-to its default.
-
-## Design notes
-
-- **No macro, on purpose.** An earlier iteration generated `#Preview`s with a
-  `#Rehearsal` macro. Two realities argued against it: Xcode's canvas only
-  discovers previews spelled literally as `#Preview` in source (so a
-  macro-generated preview is invisible where you'd use it), and the macro
-  bought little — types and defaults infer just as well through generics —
-  while costing consumers the multi-minute `swift-syntax` build. The
-  knobs-style `param` callable also removes the name/order duplication a
-  `Param`-list + closure API requires.
-- **Value storage is type-erased internally** (`[String: Any]` behind typed
-  bindings); the casts are safe by construction since each name is only ever
-  written through its own typed control.
-- **Semantic validation is the type system's job.** Unsupported types fail at
-  the call site (no matching `param` overload); duplicate names assert at
-  runtime in debug.
+Full API documentation ships as a DocC catalog: **Product > Build
+Documentation** in Xcode, or `swift package generate-documentation`.
 
 ## Examples
 
 The `Examples/RehearsalExamples` target ships `MyCard`, a demo view exercising
-all six supported types. Open the package in Xcode and preview
+every supported parameter type, plus a hand-wired harness for when you need
+full control over the state. Open the package in Xcode and preview
 `Examples/RehearsalExamples/MyCard.swift`.
-
-## Testing
-
-```sh
-swift test
-```
-
-Tests cover control selection per type, `Parameters` registration and value
-flow, and code-string generation.
