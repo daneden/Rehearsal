@@ -17,6 +17,12 @@ let package = Package(
 			name: "RehearsalExamples",
 			targets: ["RehearsalExamples"]
 		),
+		// Copies the bundled agent skill (skills/rehearsal) into a consuming
+		// project's .claude/skills directory.
+		.plugin(
+			name: "InstallRehearsalSkill",
+			targets: ["InstallRehearsalSkill"]
+		),
 	],
 	dependencies: [
 		// Build-plugin only (nothing links into consumers): recognizes the
@@ -36,6 +42,19 @@ let package = Package(
 		.testTarget(
 			name: "RehearsalTests",
 			dependencies: ["Rehearsal"]
+		),
+
+		.plugin(
+			name: "InstallRehearsalSkill",
+			capability: .command(
+				intent: .custom(
+					verb: "install-rehearsal-skill",
+					description: "Copies the Rehearsal agent skill into this project's .claude/skills directory"
+				),
+				permissions: [
+					.writeToPackageDirectory(reason: "Installs the Rehearsal agent skill into .claude/skills"),
+				]
+			)
 		),
 	]
 )

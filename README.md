@@ -154,9 +154,18 @@ full control over the state. Open the package in Xcode and preview
 
 The repository ships an [agent skill](https://agentskills.io) at
 [`skills/rehearsal/SKILL.md`](skills/rehearsal/SKILL.md) that teaches coding
-agents how to integrate and use Rehearsal. For Claude Code, copy the
-`skills/rehearsal` directory into your project's `.claude/skills/` (or
-`~/.claude/skills/` to make it available everywhere).
+agents how to integrate and use Rehearsal. Once the package is a dependency,
+install the skill into your project with the bundled command plugin:
+
+```sh
+swift package --allow-writing-to-package-directory install-rehearsal-skill
+```
+
+or, in Xcode, right-click the Rehearsal package in the Project navigator and
+choose **InstallRehearsalSkill**. Either one copies the skill into your
+project's `.claude/skills/rehearsal/`. You can also copy the
+`skills/rehearsal` directory by hand (into `~/.claude/skills/` to make it
+available everywhere).
 
 ## License
 

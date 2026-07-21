@@ -78,6 +78,16 @@ cover visionOS because runner images don't reliably include its SDK.
   catalog; Xcode builds are clean. Don't `exclude:` the catalog — the DocC
   plugin stops seeing it and the curated landing page vanishes.
 
+## Agent skill
+
+`skills/rehearsal/SKILL.md` is an Agent Skill distilled from the README's
+consumer-facing API docs — update it when the public API changes. The
+`InstallRehearsalSkill` command plugin copies it into a consumer's
+`.claude/skills/`; it locates the skill via `#filePath` (command plugins
+always compile from source in the checkout, and neither plugin context
+exposes a dependency's checkout path), so moving `skills/` requires updating
+the plugin.
+
 ## Validation philosophy
 
 Type errors surface at the call site as missing overloads (no runtime type
