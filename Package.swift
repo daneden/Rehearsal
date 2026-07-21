@@ -1,66 +1,41 @@
 // swift-tools-version: 6.4
-// The swift-tools-version declares the minimum version of Swift required to build this package.
+// Rehearsal — interactive SwiftUI previews with an auto-generated control panel.
 
 import PackageDescription
-import CompilerPluginSupport
 
 let package = Package(
-    name: "Rehearsal",
-    platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
-    products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
-        .library(
-            name: "Rehearsal",
-            targets: ["Rehearsal"]
-        ),
-        .executable(
-            name: "RehearsalClient",
-            targets: ["RehearsalClient"]
-        ),
-    ],
-    dependencies: [
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "604.0.0-latest"),
-    ],
-    targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
-        // Macro implementation that performs the source transformation of a macro.
-        .macro(
-            name: "RehearsalMacros",
-            dependencies: [
-                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-                .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
-            ]
-        ),
+	name: "Rehearsal",
+	platforms: [.iOS(.v17), .macOS(.v14)],
+	products: [
+		.library(
+			name: "Rehearsal",
+			targets: ["Rehearsal"]
+		),
+		// Exposed as a product so Xcode includes the example previews in the
+		// package's schemes.
+		.library(
+			name: "RehearsalExamples",
+			targets: ["RehearsalExamples"]
+		),
+	],
+	dependencies: [
+		// Build-plugin only (nothing links into consumers): recognizes the
+		// .docc catalog and enables `swift package generate-documentation`.
+		.package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.0"),
+	],
+	targets: [
+		.target(name: "Rehearsal"),
 
-        // Library that exposes a macro as part of its API, which is used in client programs.
-        .target(
-            name: "Rehearsal", 
-            dependencies: ["RehearsalMacros"],
-            swiftSettings: [
-                .enableUpcomingFeature("ApproachableConcurrency"),
-            ],
-        ),
+		// Example views exercising every supported parameter type.
+		.target(
+			name: "RehearsalExamples",
+			dependencies: ["Rehearsal"],
+			path: "Examples/RehearsalExamples"
+		),
 
-        // A client of the library, which is able to use the macro in its own code.
-        .executableTarget(
-            name: "RehearsalClient", 
-            dependencies: ["Rehearsal"],
-            swiftSettings: [
-                .enableUpcomingFeature("ApproachableConcurrency"),
-            ],
-        ),
-
-        // A test target used to develop the macro implementation.
-        .testTarget(
-            name: "RehearsalTests",
-            dependencies: [
-                "RehearsalMacros",
-                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
-            ],
-            swiftSettings: [
-                .enableUpcomingFeature("ApproachableConcurrency"),
-            ],
-        ),
-    ]
+		.testTarget(
+			name: "RehearsalTests",
+			dependencies: ["Rehearsal"]
+		),
+	]
 )
