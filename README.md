@@ -7,8 +7,11 @@ adjustable parameters of a view inline — right where the values are used — a
 Rehearsal builds the state, the live controls, and the wired-up preview. A
 preview is where a view rehearses its states before going live in the app.
 
-The preview shows the view on top and a scrollable control panel below, with a
-**Copy values as code** button (copies a ready-to-paste initializer call like
+Your view fills the preview, and the control panel floats alongside it: a
+resizable sheet on iOS and visionOS (the preview stays visible and interactive
+behind it), a floating overlay on macOS. Either one minimizes to a button in
+the bottom-trailing corner. The panel includes a **Copy values as code**
+button (copies a ready-to-paste initializer call like
 `MyCard(title: "Hello", count: 3, ...)` reflecting the current values) and a
 **Reset** button.
 
@@ -87,6 +90,15 @@ parameter, use the explicit variants:
 ```swift
 count: param.slider("count", range: 0...10, default: 3)   // Int as plain slider
 count: param.stepper("count", default: 3)                 // Int as stepper only
+```
+
+### Animating changes
+
+Pass `animation:` to any `param` variant to animate the view whenever that
+control changes the value — useful for rehearsing transitions between states:
+
+```swift
+style: param("style", default: .compact, animation: .spring(response: 0.4, dampingFraction: 0.75))
 ```
 
 ### Custom controls

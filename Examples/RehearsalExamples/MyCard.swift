@@ -68,9 +68,9 @@ struct MyCard: View {
 			title: param("title", default: "Hello"),
 			count: param("count", range: 0 ... 10, default: 3),
 			progress: param("progress", range: 0 ... 1, default: 0.4),
-			isOn: param("isOn", default: true),
+			isOn: param("isOn", default: true, animation: .default),
 			tint: param("tint", default: .blue),
-			style: param("style", default: .compact),
+			style: param("style", default: .compact, animation: .spring(response: 0.4, dampingFraction: 0.75)),
 			badge: param.picker("badge", options: [.hidden, .new, .sale], default: .new)
 		)
 	}

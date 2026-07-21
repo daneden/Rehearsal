@@ -41,9 +41,14 @@ public struct Parameters {
 	/// Declares an adjustable parameter and returns its current value.
 	///
 	/// The control is chosen by `Value`'s ``Adjustable`` conformance: a text
-	/// field for `String`, a toggle for `Bool`, and so on.
-	public func callAsFunction<Value: Adjustable>(_ name: String, default defaultValue: Value) -> Value {
-		declare(ParameterControl(name, binding(name, default: defaultValue)), name, default: defaultValue)
+	/// field for `String`, a toggle for `Bool`, and so on. Pass `animation:`
+	/// to animate the view whenever the control changes this value.
+	public func callAsFunction<Value: Adjustable>(
+		_ name: String,
+		default defaultValue: Value,
+		animation: Animation? = nil
+	) -> Value {
+		declare(ParameterControl(name, binding(name, default: defaultValue, animation: animation)), name, default: defaultValue)
 	}
 
 	/// Declares a numeric parameter whose control is constrained to `range`,
@@ -51,9 +56,10 @@ public struct Parameters {
 	public func callAsFunction<Value: RangeAdjustable>(
 		_ name: String,
 		range: ClosedRange<Value>,
-		default defaultValue: Value
+		default defaultValue: Value,
+		animation: Animation? = nil
 	) -> Value {
-		declare(ParameterControl(name, binding(name, default: defaultValue), range: range), name, default: defaultValue)
+		declare(ParameterControl(name, binding(name, default: defaultValue, animation: animation), range: range), name, default: defaultValue)
 	}
 
 	/// Declares an enum parameter rendered as a picker over all cases, and
@@ -65,21 +71,24 @@ public struct Parameters {
 	@_disfavoredOverload
 	public func callAsFunction<Value: CaseIterable & Hashable>(
 		_ name: String,
-		default defaultValue: Value
+		default defaultValue: Value,
+		animation: Animation? = nil
 	) -> Value where Value.AllCases: RandomAccessCollection {
-		declare(ParameterControl(name, binding(name, default: defaultValue)), name, default: defaultValue)
+		declare(ParameterControl(name, binding(name, default: defaultValue, animation: animation)), name, default: defaultValue)
 	}
 
 	/// Unset names fall back to the default in the getter rather than being
 	/// written eagerly — registration happens during body evaluation, where
-	/// state writes are not allowed.
-	func binding<Value>(_ name: String, default defaultValue: Value) -> Binding<Value> {
+	/// state writes are not allowed. A non-nil `animation` wraps the setter
+	/// so control changes animate the rehearsed view.
+	func binding<Value>(_ name: String, default defaultValue: Value, animation: Animation? = nil) -> Binding<Value> {
 		let values = values
 		let fallback = UncheckedBox(value: defaultValue)
-		return Binding(
+		let base = Binding(
 			get: { values.wrappedValue.storage[name] as? Value ?? fallback.value },
 			set: { values.wrappedValue.storage[name] = $0 }
 		)
+		return animation.map { base.animation($0) } ?? base
 	}
 
 	func currentValue<Value>(_ name: String, default defaultValue: Value) -> Value {

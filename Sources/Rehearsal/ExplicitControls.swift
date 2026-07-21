@@ -5,8 +5,8 @@ import SwiftUI
 /// a control Rehearsal doesn't know how to build.
 public extension Parameters {
 	/// Renders an `Int` parameter as a plain slider (no stepper).
-	func slider(_ name: String, range: ClosedRange<Int>, default defaultValue: Int) -> Int {
-		let control = ParameterControl(name, binding(name, default: defaultValue), kind: .slider, code: \.codeLiteral) {
+	func slider(_ name: String, range: ClosedRange<Int>, default defaultValue: Int, animation: Animation? = nil) -> Int {
+		let control = ParameterControl(name, binding(name, default: defaultValue, animation: animation), kind: .slider, code: \.codeLiteral) {
 			IntSliderRow(name: name, value: $0, range: range)
 		}
 		return declare(control, name, default: defaultValue)
@@ -14,16 +14,16 @@ public extension Parameters {
 
 	/// Renders a `Double` parameter as a slider with an explicit range —
 	/// the default control, exposed for symmetry with the `Int` override.
-	func slider(_ name: String, range: ClosedRange<Double>, default defaultValue: Double) -> Double {
-		let control = ParameterControl(name, binding(name, default: defaultValue), kind: .slider, code: \.codeLiteral) {
+	func slider(_ name: String, range: ClosedRange<Double>, default defaultValue: Double, animation: Animation? = nil) -> Double {
+		let control = ParameterControl(name, binding(name, default: defaultValue, animation: animation), kind: .slider, code: \.codeLiteral) {
 			Double.control(name: name, value: $0, range: range)
 		}
 		return declare(control, name, default: defaultValue)
 	}
 
 	/// Renders an `Int` parameter as a stepper only (no slider).
-	func stepper(_ name: String, range: ClosedRange<Int> = 0 ... 100, default defaultValue: Int) -> Int {
-		let control = ParameterControl(name, binding(name, default: defaultValue), kind: .stepper, code: \.codeLiteral) {
+	func stepper(_ name: String, range: ClosedRange<Int> = 0 ... 100, default defaultValue: Int, animation: Animation? = nil) -> Int {
+		let control = ParameterControl(name, binding(name, default: defaultValue, animation: animation), kind: .stepper, code: \.codeLiteral) {
 			IntStepperRow(name: name, value: $0, range: range)
 		}
 		return declare(control, name, default: defaultValue)
@@ -35,12 +35,12 @@ public extension Parameters {
 	/// `options` must be distinct and contain `default`; both are asserted in
 	/// debug builds, since a selection outside the tagged options renders as
 	/// no selection at all.
-	func picker<Value: Hashable>(_ name: String, options: [Value], default defaultValue: Value) -> Value {
+	func picker<Value: Hashable>(_ name: String, options: [Value], default defaultValue: Value, animation: Animation? = nil) -> Value {
 		assert(options.contains(defaultValue),
 		       "Rehearse: the default for \"\(name)\" is not in its options")
 		assert(Set(options).count == options.count,
 		       "Rehearse: the options for \"\(name)\" contain duplicates")
-		let control = ParameterControl(name, binding(name, default: defaultValue), kind: .picker, code: optionCodeLiteral) {
+		let control = ParameterControl(name, binding(name, default: defaultValue, animation: animation), kind: .picker, code: optionCodeLiteral) {
 			OptionPicker(name: name, value: $0, options: options)
 		}
 		return declare(control, name, default: defaultValue)
@@ -62,10 +62,11 @@ public extension Parameters {
 	func custom<Value, ControlBody: View>(
 		_ name: String,
 		default defaultValue: Value,
+		animation: Animation? = nil,
 		code: @escaping (Value) -> String = { String(describing: $0) },
 		@ViewBuilder control: (Binding<Value>) -> ControlBody
 	) -> Value {
-		let row = ParameterControl(name, binding(name, default: defaultValue), code: code, control: control)
+		let row = ParameterControl(name, binding(name, default: defaultValue, animation: animation), code: code, control: control)
 		return declare(row, name, default: defaultValue)
 	}
 }

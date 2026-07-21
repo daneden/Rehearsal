@@ -101,6 +101,14 @@ struct ExplicitControlTests {
 		#expect(params.session.controls.first?.codeLiteral() == ".fail")
 	}
 
+	@Test func animatedParamsRegisterAndReturnValues() {
+		let params = Parameters(session: .init(), values: .constant(ParameterValues()))
+		#expect(params("isOn", default: true, animation: .default) == true)
+		#expect(params("count", range: 0 ... 10, default: 3, animation: .default) == 3)
+		#expect(params.picker("grade", options: [Grade.pass, .fail], default: .pass, animation: .default) == .pass)
+		#expect(params.session.controls.map(\.kind) == [.toggle, .stepper, .picker])
+	}
+
 	@Test func customControlUsesProvidedViewAndCode() {
 		struct Insets: Equatable {
 			var top = 4.0
@@ -207,6 +215,14 @@ struct ValueStoreTests {
 		title.wrappedValue = "Changed"
 		#expect(box.values.storage["title"] as? String == "Changed")
 		#expect(params.currentValue("title", default: "Hello") == "Changed")
+	}
+
+	@Test func animatedBindingWritesReachTheStore() {
+		let box = ValueBox()
+		let params = Parameters(session: .init(), values: box.binding)
+		let title = params.binding("title", default: "Hello", animation: .default)
+		title.wrappedValue = "Changed"
+		#expect(box.values.storage["title"] as? String == "Changed")
 	}
 
 	@Test func clearingTheStoreRestoresDefaults() {
