@@ -163,9 +163,10 @@ swift package --allow-writing-to-package-directory install-rehearsal-skill
 
 or, in Xcode, right-click the Rehearsal package in the Project navigator and
 choose **InstallRehearsalSkill**. Either one copies the skill into your
-project's `.claude/skills/rehearsal/`. You can also copy the
-`skills/rehearsal` directory by hand (into `~/.claude/skills/` to make it
-available everywhere).
+project's `.agents/skills/rehearsal/` — the vendor-neutral location read by
+Codex, Gemini CLI, and OpenCode — and symlinks `.claude/skills/rehearsal` to
+it for Claude Code. You can also copy the `skills/rehearsal` directory by
+hand (into `~/.claude/skills/` to make it available everywhere).
 
 ## License
 

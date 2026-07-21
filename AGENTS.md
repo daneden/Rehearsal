@@ -83,7 +83,8 @@ cover visionOS because runner images don't reliably include its SDK.
 `skills/rehearsal/SKILL.md` is an Agent Skill distilled from the README's
 consumer-facing API docs — update it when the public API changes. The
 `InstallRehearsalSkill` command plugin copies it into a consumer's
-`.claude/skills/`; it locates the skill via `#filePath` (command plugins
+`.agents/skills/` (with a `.claude/skills/rehearsal` symlink for Claude
+Code); it locates the skill via `#filePath` (command plugins
 always compile from source in the checkout, and neither plugin context
 exposes a dependency's checkout path), so moving `skills/` requires updating
 the plugin.

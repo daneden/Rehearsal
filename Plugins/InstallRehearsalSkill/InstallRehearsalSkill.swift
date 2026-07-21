@@ -19,7 +19,10 @@ struct InstallRehearsalSkill: CommandPlugin {
 #endif
 
 /// Copies the skill shipped at `skills/rehearsal` into the consuming
-/// project's `.claude/skills/rehearsal`.
+/// project's `.agents/skills/rehearsal` — the vendor-neutral Agent Skills
+/// location read by Codex, Gemini CLI, and OpenCode — and bridges Claude
+/// Code (which only scans `.claude/skills`, but follows symlinks) with a
+/// relative symlink at `.claude/skills/rehearsal`.
 ///
 /// The skill source is located relative to `#filePath`: command plugins are
 /// always compiled from source on the consumer's machine, so the path baked
@@ -39,18 +42,22 @@ private func installSkill(into projectDirectory: URL) throws {
 		throw InstallError("Expected the skill at \(skillSource.path), but it isn't there. Was the skills directory moved without updating the plugin?")
 	}
 
-	let skillsDirectory = projectDirectory
-		.appendingPathComponent(".claude/skills", isDirectory: true)
-	let destination = skillsDirectory
-		.appendingPathComponent("rehearsal", isDirectory: true)
+	let canonical = projectDirectory
+		.appendingPathComponent(".agents/skills/rehearsal", isDirectory: true)
+	try fileManager.createDirectory(at: canonical.deletingLastPathComponent(), withIntermediateDirectories: true)
+	try? fileManager.removeItem(at: canonical)
+	try fileManager.copyItem(at: skillSource, to: canonical)
 
-	try fileManager.createDirectory(at: skillsDirectory, withIntermediateDirectories: true)
-	if fileManager.fileExists(atPath: destination.path) {
-		try fileManager.removeItem(at: destination)
-	}
-	try fileManager.copyItem(at: skillSource, to: destination)
+	// A relative link target survives the project directory moving or being
+	// checked out at a different path.
+	let claudeLink = projectDirectory
+		.appendingPathComponent(".claude/skills/rehearsal", isDirectory: true)
+	try fileManager.createDirectory(at: claudeLink.deletingLastPathComponent(), withIntermediateDirectories: true)
+	try? fileManager.removeItem(at: claudeLink)
+	try fileManager.createSymbolicLink(atPath: claudeLink.path, withDestinationPath: "../../.agents/skills/rehearsal")
 
-	print("Installed the Rehearsal agent skill at \(destination.path)")
+	print("Installed the Rehearsal agent skill at \(canonical.path)")
+	print("Symlinked \(claudeLink.path) for Claude Code")
 }
 
 private struct InstallError: Error, CustomStringConvertible {
